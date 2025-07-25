@@ -1,0 +1,258 @@
+{
+    "GetNode": {
+        "0": "IMAGE"
+    },
+    "SetNode": {
+        "0": "IMAGE"
+    },
+    "Fooocus Upscale": {
+        "0": "PIPE_LINE"
+    },
+    "CheckpointLoaderSimple": {
+        "0": "MODEL",
+        "1": "CLIP",
+        "2": "VAE"
+    },
+    "CLIPTextEncode": {
+        "0": "CONDITIONING"
+    },
+    "VAEEncode": {
+        "0": "LATENT"
+    },
+    "VAELoader": {
+        "0": "VAE"
+    },
+    "VAEDecode": {
+        "0": "IMAGE"
+    },
+    "LoadImage": {
+        "0": "IMAGE"
+    },
+    "UltralyticsDetectorProvider": {
+        "0": "BBOX_DETECTOR"
+    },
+    "ReActorFaceSwap": {
+        "0": "IMAGE"
+    },
+    "FaceDetailer": {
+        "0": "IMAGE"
+    },
+    "DualCLIPLoader": {
+        "0": "CLIP"
+    },
+    "KSampler": {
+        "0": "LATENT"
+    },
+    "ConditioningZeroOut": {
+        "0": "CONDITIONING"
+    },
+    "PulidFluxModelLoader": {
+        "0": "PULIDFLUX"
+    },
+    "ApplyPulidFlux": {
+        "0": "MODEL"
+    },
+    "PulidFluxInsightFaceLoader": {
+        "0": "FACEANALYSIS"
+    },
+    "PulidFluxEvaClipLoader": {
+        "0": "EVA_CLIP"
+    },
+    "BboxDetectorSEGS": {
+        "0": "SEGS"
+    },
+    "MaskToImage": {
+        "0": "IMAGE"
+    },
+    "SegsToCombinedMask": {
+        "0": "MASK"
+    },
+    "GrowMaskWithBlur": {
+        "0": "MASK"
+    },
+    "SetLatentNoiseMask": {
+        "0": "LATENT"
+    },
+    "RepeatLatentBatch": {
+        "0": "LATENT"
+    },
+    "ImageResize+": {
+        "0": "IMAGE",
+        "1": "INT",
+        "2": "INT"
+    },
+    "SUPIR_Upscale": {
+        "0": "IMAGE"
+    },
+    "LoraLoaderModelOnly": {
+        "0": "MODEL"
+    },
+    "UNETLoader": {
+        "0": "MODEL"
+    },
+    "LayerUtility: CropByMask V2": {
+        "1": "MASK",
+        "0": "IMAGE",
+        "2": "BOX"
+    },
+    "FaceBoundingBox": {
+        "0": "IMAGE"
+    },
+    "ResizeMask": {
+        "0": "MASK"
+    },
+    "EmptyImage": {
+        "0": "IMAGE"
+    },
+    "ImageToMask": {
+        "0": "MASK"
+    },
+    "ImageConcanate": {
+        "0": "IMAGE"
+    },
+    "LayerMask: BiRefNetUltraV2": {
+        "0": "IMAGE",
+        "1": "MASK"
+    },
+    "LayerMask: LoadBiRefNetModelV2": {
+        "0": "BIREFNET_MODEL"
+    },
+    "LayerMask: PersonMaskUltra V2": {
+        "1": "MASK"
+    },
+    "LayerUtility: ImageRemoveAlpha": {
+        "0": "IMAGE"
+    },
+    "ReduxAdvanced": {
+        "0": "CONDITIONING"
+    },
+    "InpaintModelConditioning": {
+        "1": "CONDITIONING",
+        "2": "LATENT",
+        "0": "CONDITIONING"
+    },
+    "DifferentialDiffusion": {
+        "0": "MODEL"
+    },
+    "PulidInsightFaceLoader": {
+        "0": "FACEANALYSIS"
+    },
+    "FaceAnalysisModels": {
+        "0": "ANALYSIS_MODELS"
+    },
+    "ConstrainImage|pysssss": {
+        "0": "IMAGE"
+    },
+    "ImageCrop+": {
+        "0": "IMAGE"
+    },
+    "MaskToSEGS": {
+        "0": "SEGS"
+    },
+    "StyleModelLoader": {
+        "0": "STYLE_MODEL"
+    },
+    "CLIPVisionLoader": {
+        "0": "CLIP_VISION"
+    },
+    "FluxGuidance": {
+        "0": "CONDITIONING"
+    },
+    "DetailerForEach": {
+        "0": "IMAGE"
+    },
+    "ImageUpscaleWithModel": {
+        "0": "IMAGE"
+    },
+    "ImageScaleToTotalPixels": {
+        "0": "IMAGE"
+    },
+    "TTP_Tile_image_size": {
+        "0": "INT",
+        "1": "INT"
+    },
+    "UpscaleModelLoader": {
+        "0": "UPSCALE_MODEL"
+    },
+    "ImageResizeKJ": {
+        "0": "IMAGE"
+    },
+    "TTP_Image_Tile_Batch": {
+        "0": "IMAGE",
+        "1": "LIST",
+        "2": "TUPLE",
+        "3": "TUPLE"
+    },
+    "ImpactImageBatchToImageList": {
+        "0": "IMAGE"
+    },
+    "VAEDecodeTiled": {
+        "0": "IMAGE"
+    },
+    "PreviewBridge": {
+        "0": "IMAGE"
+    },
+    "ImageListToImageBatch": {
+        "0": "IMAGE"
+    },
+    "LayerUtility: RestoreCropBox": {
+        "0": "IMAGE"
+    },
+    "ImpactGaussianBlurMask": {
+        "0": "MASK"
+    },
+    "UltimateSDUpscale": {
+        "0": "IMAGE"
+    },
+    "TTP_Image_Assy": {
+        "0": "IMAGE"
+    },
+    "ImageConcatMulti": {
+        "0": "IMAGE"
+    },
+    "easy imageColorMatch": {
+        "0": "IMAGE"
+    },
+    "ApplyInstantID": {
+        "1": "CONDITIONING",
+        "2": "CONDITIONING",
+        "0": "MODEL"
+    },
+    "Reroute": {
+        "0": "IMAGE"
+    },
+    "InstantIDModelLoader": {
+        "0": "INSTANTID"
+    },
+    "InstantIDFaceAnalysis": {
+        "0": "FACEANALYSIS"
+    },
+    "ControlNetLoader": {
+        "0": "CONTROL_NET"
+    },
+    "MaskBlur+": {
+        "0": "MASK"
+    },
+    "LayerUtility: CropBoxResolve": {
+        "2": "INT",
+        "3": "INT"
+    },
+    "CropMask": {
+        "0": "MASK"
+    },
+    "GrowMask": {
+        "0": "MASK"
+    },
+    "ImageColorMatch+": {
+        "0": "IMAGE"
+    },
+    "ExpressionEditor": {
+        "0": "IMAGE"
+    },
+    "easy imageListToImageBatch": {
+        "0": "IMAGE"
+    },
+    "easy imageBatchToImageList": {
+        "0": "IMAGE"
+    }
+}

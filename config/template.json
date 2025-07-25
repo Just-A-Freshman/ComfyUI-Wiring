@@ -1,0 +1,36 @@
+{
+    "nodes": {
+        "SetNode": {
+            "id": "*",
+            "type": "SetNode",
+            "pos": "*",
+            "size": {"0": 210, "1": 60},
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [],
+            "outputs": [],
+            "title": "*",
+            "properties": {},
+            "widgets_values": "*",
+            "color": "#fffe91",
+            "bgcolor": "#fffe91"
+        },
+        "GetNode": {
+            "id": "*",
+            "type": "GetNode",
+            "pos": "*",
+            "size": {"0": 210, "1": 60},
+            "flags": {},
+            "order": 1,
+            "mode": 0,
+            "inputs": [],
+            "outputs": [],
+            "title": "*",
+            "properties": {},
+            "widgets_values": "*",
+            "color": "#29d45b",
+            "bgcolor": "#29d45b"
+        }
+    }
+}
