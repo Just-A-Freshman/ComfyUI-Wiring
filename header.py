@@ -12,8 +12,8 @@ class NodePos:
     @classmethod
     def from_dict(cls, pos_dict: Dict[str, float]) -> Self:
         return cls(
-            x=int(pos_dict["0"]),
-            y=int(pos_dict["1"])
+            x=int(pos_dict.get("0", 0)),
+            y=int(pos_dict.get("1", 0))
         )
     
     @property
@@ -45,10 +45,9 @@ class Node:
     type: str
     pos: NodePos
     size: NodeSize
-    inputs: List
-    outputs: List
+    inputs: List[Dict]
+    outputs: List[Dict]
     flags: Dict
-    title: str
     widgets_values: List[str | int | float]
 
     @classmethod
@@ -61,7 +60,6 @@ class Node:
             inputs=node_dict["inputs"],
             outputs=node_dict["outputs"],
             flags=node_dict.get("flags"),
-            title=node_dict.get("title"),
             widgets_values=node_dict.get("widgets_values")
         )
 
@@ -76,7 +74,7 @@ class Link:
     link_type: str
 
     @classmethod
-    def from_list(cls, link_list: List[Any]) -> Self:
+    def from_list(cls, link_list: List[int]) -> Self:
         return cls(
             link_id=link_list[0],
             input_node_id=link_list[1],

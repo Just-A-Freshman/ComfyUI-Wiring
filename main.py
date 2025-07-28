@@ -3,8 +3,6 @@ from core import LogicalConfig, CoordinateConfig
 
 
 
-
-
 if __name__ == "__main__":
     workflow_path = r"workflow_test/4.json"
     output_path = r"D:\Users\pbl\Desktop\output.json"

@@ -6,7 +6,7 @@ import json
 from header import WorkflowData
 
 
-NODE_LINK_TABLE = Path("config/node_link_table.json")
+
 
 
 
@@ -20,30 +20,27 @@ class UtilsTool(object):
                 yield item
 
     @staticmethod
-    def filter_pure_link(links: Sequence[Sequence[int]]) -> set:
-        # eg: links = [[1, 3], [4, 5]]，表示1号输出到3号...
-        input_map: Dict[int, Set] = {}
-        output_map: Dict[int, Set] = {}
-        
-        for left_node, right_node in links:
-            if left_node not in output_map:
-                output_map[left_node] = set()
-            output_map[left_node].add(right_node)
-            
-            if right_node not in input_map:
-                input_map[right_node] = set()
-            input_map[right_node].add(left_node)
-        
-        pure_link = set()
-        for left_node, right_node in links:
-            if left_node in output_map and len(output_map[left_node]) != 1:
-                continue
-            if right_node in input_map and len(input_map[right_node]) != 1:
-                continue
-            pure_link.add((left_node, right_node))
-        
-        return pure_link
-    
+    def topological_sort(workflow_data: WorkflowData) -> List[List[int]]:
+        in_degree = {node.id: 0 for node in workflow_data.nodes}
+        out_edges = defaultdict(list)
+        for link in workflow_data.links:
+            if link.input_node_id in in_degree and link.output_node_id in in_degree:
+                out_edges[link.input_node_id].append(link.output_node_id)
+                in_degree[link.output_node_id] += 1
+        columns = []
+        current_degree = in_degree.copy()
+        while current_degree:
+            zero_degree_nodes = [node for node, deg in current_degree.items() if deg == 0]
+            if not zero_degree_nodes:
+                raise ValueError("Cycle detected in dependency graph")
+            columns.append(zero_degree_nodes)
+            for node in zero_degree_nodes:
+                del current_degree[node]
+                for neighbor in out_edges[node]:
+                    if neighbor in current_degree:
+                        current_degree[neighbor] -= 1
+        return columns
+ 
     @staticmethod
     def exclude_outliers(data: List, top_n: int = 2, threshold: float = 2) -> None:
         if len(data) <= top_n:
@@ -59,16 +56,31 @@ class UtilsTool(object):
                 data.remove(value)
 
     @staticmethod
-    def update_node_link_table(workflow_data: WorkflowData) -> None:
-        node_link_map = defaultdict(dict)
-        node_id_map = {node.id: node for node in workflow_data.nodes}
-        for link in workflow_data.links:
-            input_node = node_id_map[link.input_node_id]
-            if link.link_type != "*":
-                node_link_map[input_node.type][link.input_port] = link.link_type
-        with open(NODE_LINK_TABLE, "r", encoding="utf-8") as f:
-            node_link_table: Dict = json.load(f)
-        node_link_table.update(node_link_map)
-        with open(NODE_LINK_TABLE, "w", encoding="utf-8") as f:
-            json.dump(node_link_table, f, ensure_ascii=False, indent=4)
+    def merge_dict_by_key(similar_key_dict: dict[int, list], threshold: int = 1) -> dict:
+        if not similar_key_dict:
+            return {}
+        
+        sorted_keys = sorted(similar_key_dict.keys())
+        groups = []
+        current_group = [sorted_keys[0]]
+        
+        for key in sorted_keys[1:]:
+            if key - current_group[-1] <= threshold:
+                current_group.append(key)
+            else:
+                groups.append(current_group)
+                current_group = [key]
+        groups.append(current_group)
+        
+        result = {}
+        for group in groups:
+            max_key = max(group)
+            merged_values = []
+            for key in group:
+                merged_values.extend(similar_key_dict[key])
+            result[max_key] = merged_values
+        
+        return result
+
+    
 
