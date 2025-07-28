@@ -5,8 +5,8 @@ from core import LogicalConfig, CoordinateConfig
 
 if __name__ == "__main__":
     Setting.load_setting()
-    workflow_path = r"workflow_test/4.json"
-    output_path = r"D:\Users\pbl\Desktop\output.json"
+    workflow_path = r"你的工作流路径.json"
+    output_path = r"你的输出工作流路径.json"
     workflow_reader = WorkflowReader(workflow_path)
     workflow_writer = WorkflowWriter(workflow_reader.workflow_data)
     logical_config = LogicalConfig(workflow_reader)
