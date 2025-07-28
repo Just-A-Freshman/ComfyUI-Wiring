@@ -1,6 +1,7 @@
 # ComfyUI-Wiring
 ComfyWiring: A smart wiring assistant for ComfyUI that automatically arranges node connections to reduce clutter and improve workflow readability."
-<img width="2614" height="596" alt="image" src="https://github.com/user-attachments/assets/fac978d4-8f4c-4300-ad22-887651e76ab3" />
+<img width="2564" height="386" alt="image" src="https://github.com/user-attachments/assets/35ab3784-b43e-480c-bef3-7cba0eee3a2b" />
+
 
 
 ## Environment:
