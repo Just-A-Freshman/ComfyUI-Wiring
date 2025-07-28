@@ -3,34 +3,50 @@
         "SetNode": {
             "id": "*",
             "type": "SetNode",
-            "pos": "*",
+            "pos": {"0": 0, "1": 0},
             "size": {"0": 210, "1": 60},
             "flags": {},
-            "order": 0,
+            "order": "*",
             "mode": 0,
-            "inputs": [],
-            "outputs": [],
-            "title": "*",
+            "inputs": [
+                {
+                    "name": "*",
+                    "type": "*",
+                    "link": null
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "*",
+                    "type": "*",
+                    "links": null
+                }
+            ],
             "properties": {},
-            "widgets_values": "*",
-            "color": "#fffe91",
-            "bgcolor": "#fffe91"
+            "widgets_values": [
+                ""
+            ]
         },
         "GetNode": {
             "id": "*",
             "type": "GetNode",
-            "pos": "*",
+            "pos": {"0": 0, "1": 1},
             "size": {"0": 210, "1": 60},
             "flags": {},
-            "order": 1,
+            "order": "*",
             "mode": 0,
             "inputs": [],
-            "outputs": [],
-            "title": "*",
+            "outputs": [
+                {
+                    "name": "*",
+                    "type": "*",
+                    "links": null
+                }
+            ],
             "properties": {},
-            "widgets_values": "*",
-            "color": "#29d45b",
-            "bgcolor": "#29d45b"
+            "widgets_values": [
+                ""
+            ]
         }
     }
 }
