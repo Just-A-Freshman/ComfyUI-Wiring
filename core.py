@@ -2,7 +2,7 @@ from typing import List, Tuple, Dict
 from collections import defaultdict
 
 from header import Link
-from parser import WorkflowReader, WorkflowWriter
+from parser import WorkflowReader, WorkflowWriter, Setting
 from Utils import UtilsTool
 
 
@@ -12,8 +12,8 @@ class LogicalConfig(object):
     def __init__(self, workflow_reader: WorkflowReader) -> None:
         self.workflow_reader = workflow_reader
 
-    def add_intermediate_nodes(self, columns: List[List[int]], max_span: int=4) -> None:
-        max_span = max(max_span, 4)
+    def add_intermediate_nodes(self, columns: List[List[int]]) -> None:
+        max_span = max(Setting.max_span, 3)
         id_to_link = {link.link_id: link for link in self.workflow_reader.workflow_data.links}
         id_to_node = {node.id: node for node in self.workflow_reader.workflow_data.nodes}
         set_nodes: Dict[Tuple[int], int] = {}
@@ -184,12 +184,13 @@ class LogicalConfig(object):
             columns[col] = self.minimize_crossings(left_col, right_col, normalize_links)
 
     def get_logic_config(self) -> List[List[int]]:
-        out_edges = defaultdict(list)  # eg: {4: [3, 6, 7, 8], 5: [3]} -  {node_id: [out_node_id, ...]}
+        out_edges = defaultdict(list)
         for link in self.workflow_reader.workflow_data.links:
             out_edges[link.input_node_id].append(link.output_node_id)
         columns = UtilsTool.topological_sort(self.workflow_reader.workflow_data)
         self.column_forward(columns, out_edges, start=-1)
-        self.add_intermediate_nodes(columns)
+        if Setting.set_node:
+            self.add_intermediate_nodes(columns)
         self.up_down_adjust(columns)
         return columns
 
@@ -213,7 +214,10 @@ class CoordinateConfig(object):
                 return False
         return True
     
-    def modify_layout(self, columns: List[List[int]], gap_x=100, gap_y=100):
+    def modify_layout(self, columns: List[List[int]]) -> None:
+        gap_x = Setting.gap_x
+        gap_y = Setting.gap_y
+        fixed_size = Setting.fixed_size
         if not self.is_valid_columns(columns):
             raise ValueError("The nodes in the columns are different from those in the nodes passed during initialization.")
         input_nodes = self.build_data()
@@ -222,6 +226,8 @@ class CoordinateConfig(object):
         positions: Dict[int, Tuple[int]] = {}
         prev_x: int = 0
         prev_max_width: int = 0
+        if Setting.force_unfold:
+            workflow_writer.unfold_all_nodes()
         for column in columns:
             x0 = prev_x + prev_max_width + (gap_x if prev_max_width > 0 else 0)
             col_widths = [WorkflowReader.real_size(id_to_node[node]).width for node in column]
@@ -230,8 +236,9 @@ class CoordinateConfig(object):
             offsets = []
             current_offset = 0
             for i, node in enumerate(column):
+                node_obj = id_to_node[node]
                 offsets.append(current_offset)
-                node_height = WorkflowReader.real_size(id_to_node[node]).height
+                node_height = WorkflowReader.real_size(node_obj).height
                 current_offset += node_height + (gap_y if i < len(column) - 1 else 0)
  
             desired_y_list = []
@@ -262,8 +269,8 @@ class CoordinateConfig(object):
                 positions[node] = (x0, y_pos)
                 id_to_node[node].pos.x = x0
                 id_to_node[node].pos.y = y_pos
-                id_to_node[node].size.width = max_width
-            
+                if not fixed_size:
+                    id_to_node[node].size.width = max_width
             prev_x = x0
             prev_max_width = max_width
 

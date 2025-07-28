@@ -10,6 +10,7 @@ from header import WorkflowData, Node, NodeSize, Link
 
 CONFIG = Path("config")
 TEMPLATE = CONFIG / "template.json"
+OPTIONS = CONFIG / "options.json"
 COLLAPSE_WIDTH = 150
 COLLAPSE_HEIGHT = 30
 
@@ -86,6 +87,10 @@ class WorkflowWriter(object):
                 return False
         return True
 
+    def unfold_all_nodes(self) -> None:
+        for node in self.workflow_data.nodes:
+            node.flags["collapsed"] = False
+        
     def remove_exist_link(self, output_node_id: int, output_port: int) -> None:
         target_link = None
         for link in self.workflow_data.links:
@@ -178,3 +183,24 @@ class WorkflowWriter(object):
         raw_data["last_link_id"] = self.workflow_data.last_link_id
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(raw_data, f, ensure_ascii=False, indent=4)
+
+
+
+class Setting(object):
+    gap_x: int = 100
+    gap_y: int = 100
+    max_span: int = 6
+    fixed_size: bool = False
+    set_node: bool = True
+    force_unfold: bool = True
+
+    @classmethod
+    def load_setting(cls) -> None:
+        with open(OPTIONS, "r", encoding="utf-8") as f:
+            options: dict = json.load(f)
+        cls.gap_x = options.get("gap_x", 100)
+        cls.gap_y = options.get("gap_y", 100)
+        cls.max_span = options.get("max_span", 6)
+        cls.fixed_size = options.get("fixed_size", False)
+        cls.set_node = options.get("set_node", True)
+        cls.force_unfold = options.get("force_unfold", True)
