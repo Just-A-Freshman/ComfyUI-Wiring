@@ -5,10 +5,9 @@ ComfyWiring: A smart wiring assistant for ComfyUI that automatically arranges no
 
 
 ## Environment:
-You need a basic Python environment (version 3.4 or higher). The project does not depend on any third-party libraries.
+You need a basic Python environment (version 3.4 or higher). To make a beautiful UI design, the project depend on the vue and flask api. However, if you only focus on the core algorithm， see the `core` directory or download the release file: `frontend.zip`. 
 
 ## Using
-The main program is in main.py, and you can use it simply by modifying the file path names inside.
-you can config in config/options.json, it contains some basic variables to control the generate result.
+After you finish configing the environment, you can use it simply by double click `app.py`, then you will see a cmd window. Click the link inside and a easyuse UI will be seen.
 
-If you like this project, don't be shy to give me a thumbs-up！
+## If you like this project, don't be shy to give me a thumbs-up！
