@@ -1,13 +1,15 @@
-# ComfyUI-Wiring
-ComfyWiring: A smart wiring assistant for ComfyUI that automatically arranges node connections to reduce clutter and improve workflow readability."
-<img width="2564" height="386" alt="image" src="https://github.com/user-attachments/assets/35ab3784-b43e-480c-bef3-7cba0eee3a2b" />
+# ComfyUI-Wiring  
+ComfyWiring: A smart wiring assistant for ComfyUI that automatically organizes node connections to reduce clutter and enhance workflow readability.  
+
+<img width="2564" height="386" alt="image" src="https://github.com/user-attachments/assets/35ab3784-b43e-480c-bef3-7cba0eee3a2b" />  
 
 
+## Environment Requirements  
+A basic Python environment (version 3.4 or higher) is required. For the full, visually polished UI experience, the project depends on Vue and Flask APIs. If you only need to work with the core algorithm, refer to the `core` directory or download the release file: `frontend.zip`.  
 
-## Environment:
-You need a basic Python environment (version 3.4 or higher). To make a beautiful UI design, the project depend on the vue and flask api. However, if you only focus on the core algorithm， see the `core` directory or download the release file: `frontend.zip`. 
 
-## Using
-After you finish configing the environment, you can use it simply by double click `app.py`, then you will see a cmd window. Click the link inside and a easyuse UI will be seen.
+## Usage  
+Once the environment is configured, simply double-click `app.py`. A command prompt window will appear—click the link within it to access the user-friendly interface.  
 
-## If you like this project, don't be shy to give me a thumbs-up！
+
+If you find this project useful, feel free to give it a thumbs-up!
