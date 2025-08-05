@@ -1,0 +1,8 @@
+{
+    "gap_x": 170,
+    "gap_y": 100,
+    "max_span": 6,
+    "size_align": true,
+    "set_node": true,
+    "force_unfold": true
+}
