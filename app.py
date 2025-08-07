@@ -1,14 +1,17 @@
 import os
 import json
 from pathlib import Path
-from typing import Tuple
-from flask import Flask, render_template, request, send_file, jsonify
+from typing import Literal
+
+
+from flask import Flask, Response, render_template, jsonify, send_file, request
 from werkzeug.utils import secure_filename
 
 
-from core.parser import WorkflowReader, WorkflowWriter, Setting
+from core.parser import WorkflowReader, WorkflowWriter
+from core.Utils import NodeOptions
 from core.core import LogicalConfig, CoordinateConfig
-from core.header import Node
+
 
 
 current_dir = Path(__file__).parent.absolute()
@@ -17,19 +20,18 @@ app = Flask(
     template_folder = current_dir / "web" / "templates",
     static_folder = current_dir / "web" / "static"
 )
-app.config['temp'] = 'temp'
+app.config['temp'] = Path('temp')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
 os.makedirs(app.config['temp'], exist_ok=True)
 
 
 @app.route('/')
-def index():
+def index() -> str:
     return render_template(r"index.html")
 
 
 @app.route('/generate', methods=['POST'])
-def generate_layout():
-    # 检查文件是否上传
+def generate_layout() -> tuple[Response, Literal[400]] | Response | tuple[Response, Literal[500]]:
     if 'file' not in request.files:
         return jsonify({'error': 'No file uploaded'}), 400
     
@@ -38,10 +40,10 @@ def generate_layout():
         return jsonify({'error': 'No selected file'}), 400
     temp_filename = "input.json" if file.filename is not None else ""
     filename = secure_filename(temp_filename)
-    input_path = os.path.join(app.config['temp'], filename)
+    input_path = app.config['temp'] / filename
     file.save(input_path)
     config: dict = json.loads(request.form.get('config', '{}'))
-    Setting.update_setting({
+    NodeOptions.update_setting({
         'gap_x': config.get('gap_x', 100),
         'gap_y': config.get('gap_y', 100),
         'max_span': config.get('max_span', 6),
@@ -55,15 +57,14 @@ def generate_layout():
         workflow_writer = WorkflowWriter(workflow_reader.workflow_data)
         
         logical_config = LogicalConfig(workflow_reader)
-        columns = logical_config.get_logic_config()
-        
         coordinate_config = CoordinateConfig(workflow_reader)
+        
+        columns = logical_config.get_logic_config()
         coordinate_config.modify_layout(columns)
         output_filename = f"output.json"
-        output_path = os.path.join(app.config['temp'], output_filename)
+        output_path = app.config['temp'] / output_filename
         workflow_writer.export_file(output_path)
         
-        # 生成预览数据
         with open(output_path, 'r', encoding='utf-8') as f:
             preview_data = json.load(f)
         return jsonify({
@@ -80,17 +81,12 @@ def generate_layout():
 
 
 @app.route('/download/<filename>')
-def download_file(filename):
-    output_path = os.path.join(app.config['temp'], filename)
-    if not os.path.exists(output_path):
+def download_file(filename: str) -> tuple[Response, Literal[404]] | Response:
+    output_path: Path = app.config['temp'] / filename
+    if not output_path.exists():
         return jsonify({'error': 'File not found'}), 404
     return send_file(output_path, as_attachment=True)
 
 
-def get_node_label(node: Node):
-    if node.widgets_values and isinstance(node.widgets_values, list) and len(node.widgets_values) > 0:
-        return str(node.widgets_values[0])
-    return f"{node.type} ({node.id})"
-
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()

@@ -1,9 +1,9 @@
 from typing import List, Tuple, Dict
 from collections import defaultdict
 
-from .header import Link
-from .parser import WorkflowReader, WorkflowWriter, Setting
-from .Utils import UtilsTool
+from .header import Link, Node
+from .parser import WorkflowReader, WorkflowWriter
+from .Utils import Tool, NodeOptions, GroupOptions
 
 
 
@@ -13,17 +13,19 @@ class LogicalConfig(object):
         self.workflow_reader = workflow_reader
 
     def add_intermediate_nodes(self, columns: List[List[int]]) -> None:
-        max_span = max(Setting.max_span, 3)
-        id_to_link = {link.link_id: link for link in self.workflow_reader.workflow_data.links}
+        max_span = max(NodeOptions.max_span, 3)
+        id_to_link = self.workflow_reader.id_to_link
         id_to_node = {node.id: node for node in self.workflow_reader.workflow_data.nodes}
         set_nodes: Dict[Tuple[int, int], int] = {}
         node_to_col: Dict[int, int] = self.workflow_reader.node_to_col(columns)
         for node in self.workflow_reader.workflow_data.nodes:
             if node.type != "SetNode":
                 continue
-            link = id_to_link.get(node.inputs[0]["link"])
-            if link:
-                set_nodes[(link.input_node_id, link.input_port)] = node.id
+            link_id = node.inputs[0]["link"]
+            if link_id is None or link_id not in id_to_link:
+                continue
+            link = id_to_link[link_id]
+            set_nodes[(link.input_node_id, link.input_port)] = node.id
         workflow_writer = WorkflowWriter(self.workflow_reader.workflow_data)
         links = self.workflow_reader.workflow_data.links
         long_links_table: defaultdict[Tuple[int, int], List[Link]] = defaultdict(list)
@@ -44,8 +46,6 @@ class LogicalConfig(object):
                 set_node.widgets_values = [node_name]
                 set_nodes[(input_node_id, input_port)] = set_node.id
                 new_link = workflow_writer.create_link(input_node_id, input_port, set_node.id, 0)
-                if new_link is None:
-                    return
                 set_node_input = set_node.inputs[0]
                 set_node_input["type"] = new_link.link_type
                 set_node_input["name"] = new_link.link_type
@@ -55,7 +55,7 @@ class LogicalConfig(object):
             input_node_id, _ = k
             new_col = node_to_col[input_node_id] + 1
             set_new_columns[new_col].append(v)
-        set_new_columns = UtilsTool.merge_dict_by_key(set_new_columns, threshold=1)
+        set_new_columns = Tool.merge_dict_by_key(set_new_columns, threshold=1)
         count = 0
         for col_idx, new_columns in set_new_columns.items():
             columns.insert(col_idx + count, new_columns)
@@ -110,22 +110,22 @@ class LogicalConfig(object):
             for node in col_nodes:
                 if node not in out_edges or node in fixed_nodes:
                     continue
-                    
-                min_output_col: int = 4294967295
+
+                min_output_col: int = 1024 * 1024
                 for out_node in out_edges[node]:
                     out_col = node_to_col[out_node]
                     if out_col > col_idx and out_col < min_output_col:
                         min_output_col = out_col
-                
-                if min_output_col != float('inf') and min_output_col > col_idx + 1:
+
+                if min_output_col != 1024 * 1024 and min_output_col > col_idx + 1:
+                    min_output_col: int
                     columns[col_idx].remove(node)
                     new_col = min_output_col - 1
                     columns[new_col].append(node)
                     node_to_col[node] = new_col
                     col_sets[col_idx].remove(node)
                     col_sets[new_col].add(node)
-        
-        columns = [col for col in columns if col]
+        columns[:] = [col for col in columns if col]
 
     def normalize_relations(self, left_col: List[int], right_col: List[int]) -> Tuple[List[int], List[List[int]]]:
         """将节点间的多连接简化为单连接，并为每个连接创建唯一节点"""
@@ -189,9 +189,9 @@ class LogicalConfig(object):
         out_edges = defaultdict(list)
         for link in self.workflow_reader.workflow_data.links:
             out_edges[link.input_node_id].append(link.output_node_id)
-        columns = UtilsTool.topological_sort(self.workflow_reader.workflow_data)
+        columns = Tool.topological_sort(self.workflow_reader.workflow_data)
         self.column_forward(columns, out_edges, start=-1)
-        if Setting.set_node:
+        if NodeOptions.set_node:
             self.add_intermediate_nodes(columns)
         self.up_down_adjust(columns)
         return columns
@@ -210,30 +210,44 @@ class CoordinateConfig(object):
     
     def is_valid_columns(self, columns) -> bool:
         node_id_list = set(node.id for node in self.workflow_reader.workflow_data.nodes)
-        columns_1d = UtilsTool.flatten_generator(columns)
+        columns_1d = Tool.flatten_generator(columns)
         for node_id in columns_1d:
             if node_id not in node_id_list:
                 return False
         return True
     
-    def modify_layout(self, columns: List[List[int]]) -> None:
-        gap_x = Setting.gap_x
-        gap_y = Setting.gap_y
-        size_align = Setting.size_align
+    def get_orig_groups(self) -> defaultdict[int, list[Node]]:
+        contain_table: defaultdict[int, list[Node]] = defaultdict(list)
+        nodes = self.workflow_reader.workflow_data.nodes
+        for group in self.workflow_reader.workflow_data.groups:
+            box = group.bounding
+            group_coord = (box[0], box[1], box[0] + box[2], box[1] + box[3])
+            for node in nodes:
+                node_coord = (node.pos.x, node.pos.y, node.pos.x + node.size.width, node.pos.y + node.size.height)
+                S_node = node.size.width * node.size.height
+                intersect_area = Tool.rectangle_intersection_area(node_coord, group_coord)
+                if intersect_area / S_node > GroupOptions.group_contain_propertion:
+                    contain_table[group.id].append(node)
+        return contain_table
+
+    def modify_node_layout(self, columns: List[List[int]]) -> None:
+        gap_x = NodeOptions.gap_x
+        gap_y = NodeOptions.gap_y
+        size_align = NodeOptions.size_align
         if not self.is_valid_columns(columns):
             raise ValueError("The nodes in the columns are different from those in the nodes passed during initialization.")
         input_nodes = self.build_data()
         workflow_writer = WorkflowWriter(self.workflow_reader.workflow_data)
-        id_to_node = workflow_writer.id_node_table
+        id_to_node = workflow_writer.id_to_node
         positions: Dict[int, Tuple[int, int]] = {}
         prev_x: int = 0
         prev_max_width: int = 0
-        if Setting.force_unfold:
+        if NodeOptions.force_unfold:
             workflow_writer.unfold_all_nodes()
         for column in columns:
             x0 = prev_x + prev_max_width + (gap_x if prev_max_width > 0 else 0)
             col_widths = [WorkflowReader.real_size(id_to_node[node]).width for node in column]
-            UtilsTool.exclude_outliers(col_widths)
+            Tool.exclude_outliers(col_widths)
             max_width = max(col_widths)
             offsets = []
             current_offset = 0
@@ -252,7 +266,7 @@ class CoordinateConfig(object):
                 
                 centers = []
                 for in_node in input_nodes[node]:
-                    if in_node in positions:
+                    if in_node in positions and in_node:
                         in_y = positions[in_node][1]
                         in_height = WorkflowReader.real_size(id_to_node[in_node]).height
                         centers.append(in_y + in_height / 2)
@@ -265,15 +279,52 @@ class CoordinateConfig(object):
             total_diff = [des_y - offsets[i] for i, des_y in enumerate(desired_y_list) if des_y is not None]
             y0 = sum(total_diff) / len(total_diff) if total_diff else 0
             
-            
             for i, node in enumerate(column):
                 y_pos = y0 + offsets[i]
-                positions[node] = (x0, y_pos)
-                id_to_node[node].pos.x = x0
-                id_to_node[node].pos.y = y_pos
+                node = id_to_node[node]
+                positions[node.id] = (x0, y_pos)
+                node.pos.x = x0
+                node.pos.y = y_pos
                 if size_align:
-                    id_to_node[node].size.width = max_width
+                    node.size.width = max_width
             prev_x = x0
             prev_max_width = max_width
 
+    def modify_group_layout(self, orig_groups: defaultdict[int, list[Node]]) -> None:
+        group_opt = GroupOptions
+        workflow_writer = WorkflowWriter(self.workflow_reader.workflow_data)
+        id_to_group = {group.id: group for group in workflow_writer.workflow_data.groups}
+        undistributed_y_offset = 1
+        for group_id, group in orig_groups.items():
+            min_x = min(node.pos.x for node in group)
+            min_y = min(node.pos.y for node in group)
+            max_x = max(node.pos.x + node.size.width for node in group)
+            max_y = max(node.pos.y + node.size.height for node in group)
+            new_group = []
+            for node in self.workflow_reader.workflow_data.nodes:
+                node_coord = (node.pos.x, node.pos.y, node.pos.x + node.size.width, node.pos.y + node.size.height)
+                S_node: int = max(node.size.width * node.size.height, 1)
+                intersect_area = Tool.rectangle_intersection_area(node_coord, (min_x, min_y, max_x, max_y))
+                if intersect_area / S_node > group_opt.group_contain_propertion:
+                    new_group.append(node)
+            if not new_group:
+                continue
+            group_obj = id_to_group[group_id]
+            if len(group) / len(new_group) > group_opt.same_group_node_propertion:
+                heading_size = group_obj.font_size * group_opt.heading_size_multiplier
+                group_obj.bounding = [
+                    min_x - group_opt.padding, min_y - heading_size, 
+                    max_x - min_x + group_opt.padding * 2, max_y - min_y + heading_size
+                ]
+            else:
+                group_obj.bounding = [
+                    group_opt.undistrubuted_x, undistributed_y_offset * group_opt.undistrubuted_y_step,
+                    group_opt.undistrubuted_width, group_opt.undistrubuted_height
+                ]
+                undistributed_y_offset += 1
+                
+    def modify_layout(self, columns: List[List[int]]) -> None:
+        orig_groups = self.get_orig_groups()
+        self.modify_node_layout(columns)
+        self.modify_group_layout(orig_groups)
 

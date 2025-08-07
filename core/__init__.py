@@ -1,3 +1,4 @@
-from .parser import Setting 
+from .Utils import NodeOptions, GroupOptions
 
-Setting.load_setting()
+NodeOptions.load_setting()
+GroupOptions.load_setting()

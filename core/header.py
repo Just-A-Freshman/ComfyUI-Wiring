@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Dict, Any, Self
+from typing import List, Dict, Any, Self, Union
 
 
 
@@ -74,14 +74,37 @@ class Link:
     link_type: str
 
     @classmethod
-    def from_list(cls, link_list: List) -> Self:
+    def from_list(cls, link_list: List[Union[int, str]]) -> Self:
+        if len(link_list) != 6:
+            raise ValueError(f"link_list must contain exactly 6 elements, got {len(link_list)}")
         return cls(
-            link_id=link_list[0],
-            input_node_id=link_list[1],
-            input_port=link_list[2],
-            output_node_id=link_list[3],
-            output_port=link_list[4],
-            link_type=link_list[5]
+            link_id=int(link_list[0]),
+            input_node_id=int(link_list[1]),
+            input_port=int(link_list[2]),
+            output_node_id=int(link_list[3]),
+            output_port=int(link_list[4]),
+            link_type=str(link_list[5])
+        )
+
+
+@dataclass
+class Group:
+    id: int
+    title: str
+    bounding: list[int]
+    color: str
+    font_size: int
+    flags: Dict[str, Any] | None
+
+    @classmethod
+    def from_dict(cls, group_dict: Dict[str, Any]) -> Self:
+        return cls(
+            id=group_dict["id"],
+            title=group_dict["title"],
+            bounding=[int(i) for i in group_dict["bounding"]],
+            color=group_dict["color"],
+            font_size=group_dict["font_size"],
+            flags=group_dict.get("flags")
         )
 
 
@@ -90,6 +113,7 @@ class Link:
 class WorkflowData:
     nodes: List[Node]
     links: List[Link]
+    groups: List[Group]
     last_node_id: int
     last_link_id: int
     raw_data: dict
@@ -99,7 +123,9 @@ class WorkflowData:
         return cls(
             nodes=[Node.from_dict(node) for node in workflow_dict["nodes"]],
             links=[Link.from_list(link) for link in workflow_dict["links"]],
+            groups=[Group.from_dict(group) for group in workflow_dict["groups"]],
             last_node_id=workflow_dict["last_node_id"],
             last_link_id=workflow_dict["last_link_id"],
             raw_data=workflow_dict
         )
+

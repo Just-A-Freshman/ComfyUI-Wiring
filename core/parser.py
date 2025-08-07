@@ -4,15 +4,11 @@ from pathlib import Path
 import json
 import copy
 
-from .Utils import UtilsTool
+from .Utils import Tool, COLLAPSE_WIDTH, COLLAPSE_HEIGHT, TEMPLATE
 from .header import WorkflowData, Node, NodeSize, Link
 
 
-CONFIG = Path("config")
-TEMPLATE = CONFIG / "template.json"
-OPTIONS = CONFIG / "options.json"
-COLLAPSE_WIDTH = 150
-COLLAPSE_HEIGHT = 30
+
 
 
 class WorkflowReader(object):
@@ -30,23 +26,29 @@ class WorkflowReader(object):
     def import_file(self, workflow_path) -> WorkflowData:
         self.is_valid_workflow_file(workflow_path)
         with open(workflow_path, 'r', encoding='utf-8') as f:
-            workflow_dict = json.load(f)
-            workflow_data = WorkflowData.from_dict(workflow_dict)
-            return workflow_data
+            try:
+                workflow_dict = json.load(f)
+                workflow_data = WorkflowData.from_dict(workflow_dict)
+                return workflow_data
+            except Exception as e:
+                raise ValueError(f"Failed to parse workflow file: {e}")
+    
+    @property
+    def id_to_link(self) -> Dict[int, Link]:
+        return {link.link_id: link for link in self.workflow_data.links} 
         
     @staticmethod
-    def node_to_col(columns) -> Dict[int, int]:
+    def node_to_col(columns: List[List[int]]) -> Dict[int, int]:
         node_to_col: Dict[int, int] = {}
         for col_idx, col_nodes in enumerate(columns):
             for node in col_nodes:
                 node_to_col[node] = col_idx
         return node_to_col
-        
+
     @staticmethod
     def real_size(node: Node) -> NodeSize:
-        if node.flags:
-            if node.flags.get("collapsed"):
-                return NodeSize(width=COLLAPSE_WIDTH, height=COLLAPSE_HEIGHT)
+        if node.flags and node.flags.get("collapsed", False):
+            return NodeSize(width=COLLAPSE_WIDTH, height=COLLAPSE_HEIGHT)
         return node.size
     
     @staticmethod
@@ -63,18 +65,14 @@ class WorkflowWriter(object):
     def __init__(self, workflow_data: WorkflowData) -> None:
         self.workflow_data = workflow_data
         self.workflow_template = self.load_workflow_template()
-
-    @property
-    def id_node_table(self) -> Dict[int, Node]:
-        return {node.id: node for node in self.workflow_data.nodes}
+        self.id_to_node = {node.id: node for node in self.workflow_data.nodes}
 
     def load_workflow_template(self) -> Dict[str, Dict]:
         with open(TEMPLATE, "r", encoding="utf-8") as f:
             return json.load(f)
 
     def is_valid_link(self, input_node_id: int, input_port: int, output_node_id: int, output_port: int) -> bool:
-        id_to_node = self.id_node_table
-        if input_node_id not in id_to_node or output_node_id not in id_to_node:
+        if input_node_id not in self.id_to_node or output_node_id not in self.id_to_node:
             raise ValueError("Invalid input_node_id or output_node_id!")
         if input_node_id == output_node_id:
             raise ValueError("Cannot link a node to itself!")
@@ -92,7 +90,7 @@ class WorkflowWriter(object):
         for node in self.workflow_data.nodes:
             if node.flags:
                 node.flags["collapsed"] = False
-        
+
     def remove_exist_link(self, output_node_id: int, output_port: int) -> None:
         target_link = None
         for link in self.workflow_data.links:
@@ -103,16 +101,16 @@ class WorkflowWriter(object):
         if not target_link:
             return
         
-        input_node = self.id_node_table.get(target_link.input_node_id)
-        output_node = self.id_node_table.get(target_link.output_node_id)
-        
+        input_node = self.id_to_node.get(target_link.input_node_id)
+        output_node = self.id_to_node.get(target_link.output_node_id)
+
         if not input_node or not output_node:
             # 节点不存在，说明链接本身也是无效的，可以移除
             self.workflow_data.links.remove(target_link)
             return
         
         for output in input_node.outputs:
-            output_links: List[int] = output.get("links", [])
+            output_links: List = output.get("links", [])
             if not output_links:
                 continue
             if target_link.link_id in output_links:
@@ -137,15 +135,19 @@ class WorkflowWriter(object):
         node_template.update(kwargs, id=self.workflow_data.last_node_id)
         node = Node.from_dict(node_template)
         self.workflow_data.nodes.append(node)
+        # 更新 id_to_node 映射
+        self.id_to_node[node.id] = node
         return node
 
-    def create_link(self, input_node_id: int, input_port: int, output_node_id: int, output_port: int) -> Link | None:
+    def create_link(self, input_node_id: int, input_port: int, output_node_id: int, output_port: int) -> Link:
         if not self.is_valid_link(input_node_id, input_port, output_node_id, output_port):
-            return
+            raise ValueError("Invalid link parameters!")
         self.remove_exist_link(output_node_id, output_port)
-        input_node = self.id_node_table[input_node_id]
-        output_node = self.id_node_table[output_node_id]
+        input_node = self.id_to_node[input_node_id]
+        output_node = self.id_to_node[output_node_id]
         link_type = input_node.outputs[input_port].get("type", "*")
+        if link_type == "*":
+            link_type = output_node.inputs[output_port].get("type", "*")
         self.workflow_data.last_link_id += 1
         link_list = [
             self.workflow_data.last_link_id,
@@ -163,50 +165,42 @@ class WorkflowWriter(object):
         return new_link
 
     def export_file(self, output_path: str, overwrite_raw_data: bool = False) -> None:
-        orders = UtilsTool.flatten_generator(UtilsTool.topological_sort(self.workflow_data))
-        order_table = {node_id: order for order, node_id in enumerate((orders))}
-        raw_data = self.workflow_data.raw_data if overwrite_raw_data else self.workflow_data.raw_data.copy()
+        orders = Tool.flatten_generator(Tool.topological_sort(self.workflow_data))
+        order_table = {node_id: order for order, node_id in enumerate(orders)}
+        
+        raw_data = self.workflow_data.raw_data
+        if not overwrite_raw_data:
+            raw_data = raw_data.copy()
+            raw_data["nodes"] = raw_data["nodes"].copy()
+        
         nodes_template = self.workflow_template["nodes"]
         raw_id_nodes: Dict[int, Dict] = {node["id"]: node for node in raw_data["nodes"]}
-        new_id_nodes: Dict[int, Node] = {node.id: node for node in self.workflow_data.nodes}
+
         for new_node in self.workflow_data.nodes:
+            node_type = new_node.type
             new_node_dict: dict = WorkflowReader.asdict(new_node)
             new_node_dict["order"] = order_table[new_node.id]
+            
             if new_node.id in raw_id_nodes:
                 raw_id_nodes[new_node.id].update(new_node_dict)
             else:
-                node_type: str = new_id_nodes[new_node.id].type
-                template: Dict = nodes_template.get(node_type, [])
+                template: Dict = nodes_template.get(node_type, {})
                 if not template:
-                    raise KeyError(f"type: {node_type} not found in  nodes template.")
-                raw_data["nodes"].append({**template, **new_node_dict})
-        raw_data["links"] = [list(WorkflowReader.asdict(link).values()) for link in self.workflow_data.links]
+                    raise KeyError(f"type: {node_type} not found in nodes template.")
+                template_copy = template.copy()
+                template_copy.update(new_node_dict)
+                raw_data["nodes"].append(template_copy)
+        
+        raw_data["links"] = [
+            [link.link_id, link.input_node_id, link.input_port, 
+            link.output_node_id, link.output_port, link.link_type]
+            for link in self.workflow_data.links
+        ]
+        raw_data["groups"] = [WorkflowReader.asdict(group) for group in self.workflow_data.groups]
         raw_data["last_node_id"] = self.workflow_data.last_node_id
         raw_data["last_link_id"] = self.workflow_data.last_link_id
+        
         with open(output_path, "w", encoding="utf-8") as f:
-            json.dump(raw_data, f, ensure_ascii=False, indent=4)
+            json.dump(raw_data, f, ensure_ascii=False)
 
 
-
-class Setting(object):
-    gap_x: int = 100
-    gap_y: int = 100
-    max_span: int = 6
-    size_align: bool = True
-    set_node: bool = True
-    force_unfold: bool = True
-
-    @classmethod
-    def load_setting(cls) -> None:
-        with open(OPTIONS, "r", encoding="utf-8") as f:
-            options: dict = json.load(f)
-            cls.update_setting(options)
-
-    @classmethod
-    def update_setting(cls, options: dict) -> None:
-        cls.gap_x = options.get("gap_x", 100)
-        cls.gap_y = options.get("gap_y", 100)
-        cls.max_span = options.get("max_span", 6)
-        cls.size_align = options.get("size_align", True)
-        cls.set_node = options.get("set_node", True)
-        cls.force_unfold = options.get("force_unfold", True)
