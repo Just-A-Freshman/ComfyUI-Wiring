@@ -1,38 +1,48 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from typing import List, Dict, Any, Self, Union
-
-
+from random import randint
 
 
 @dataclass
-class NodePos:
-    x: int
-    y: int
-
+class NodeProperty:
     @classmethod
-    def from_dict(cls, pos_dict: Dict[str, float]) -> Self:
+    def from_dict(cls, prop_dict: Dict[str, Any]) -> Self:
+        property = fields(cls)
         return cls(
-            x=int(pos_dict.get("0", 0)),
-            y=int(pos_dict.get("1", 0))
+            **{field.name: value for field, value in zip(property, prop_dict.values())}
         )
     
+    @classmethod
+    def from_list(cls, prop_list: List[Any]) -> Self:
+        property = fields(cls)
+        return cls(
+            **{field.name: prop_list[i] for i, field in enumerate(property)}
+        )
+    
+    @classmethod
+    def from_data(cls, prop_data: Union[List[Any], Dict[str, Any]]):
+        if isinstance(prop_data, dict):
+            return cls.from_dict(prop_data)
+        elif isinstance(prop_data, list):
+            return cls.from_list(prop_data)
+        else:
+            raise TypeError(f"Unsupported type for {cls.__name__} creation")
+
+
+@dataclass
+class NodePos(NodeProperty):
+    x: int
+    y: int
+ 
     @property
     def __dict__(self) -> Dict[str, int]:
         return {"0": self.x, "1": self.y}
 
-    
 
 @dataclass
-class NodeSize:
+class NodeSize(NodeProperty):
     width: int
     height: int
-
-    @classmethod
-    def from_dict(cls, size_dict: Dict[str, float]) -> Self:
-        return cls(
-            width=int(size_dict["0"]),
-            height=int(size_dict["1"])
-        )
     
     @property
     def __dict__(self) -> Dict[str, int]:
@@ -55,10 +65,10 @@ class Node:
         return cls(
             id=node_dict["id"],
             type=node_dict["type"],
-            pos=NodePos.from_dict(node_dict["pos"]),
-            size=NodeSize.from_dict(node_dict["size"]),
-            inputs=node_dict["inputs"],
-            outputs=node_dict["outputs"],
+            pos=NodePos.from_data(node_dict["pos"]),
+            size=NodeSize.from_data(node_dict["size"]),
+            inputs=node_dict.get("inputs", []),
+            outputs=node_dict.get("outputs", []),
             flags=node_dict.get("flags"),
             widgets_values=node_dict.get("widgets_values")
         )
@@ -94,17 +104,17 @@ class Group:
     bounding: list[int]
     color: str
     font_size: int
-    flags: Dict[str, Any] | None
+    flags: Dict[str, Any]
 
     @classmethod
     def from_dict(cls, group_dict: Dict[str, Any]) -> Self:
         return cls(
-            id=group_dict["id"],
-            title=group_dict["title"],
+            id=group_dict.get("id", randint(0, 10000)),
+            title=group_dict.get("title", ""),
             bounding=[int(i) for i in group_dict["bounding"]],
-            color=group_dict["color"],
-            font_size=group_dict["font_size"],
-            flags=group_dict.get("flags")
+            color=group_dict.get("color", "#3f789e"),
+            font_size=group_dict.get("font_size", 24),
+            flags=group_dict.get("flags", {})
         )
 
 

@@ -13,7 +13,7 @@ class LogicalConfig(object):
         self.workflow_reader = workflow_reader
 
     def add_intermediate_nodes(self, columns: List[List[int]]) -> None:
-        max_span = max(NodeOptions.max_span, 3)
+        max_span = max(NodeOptions.max_span, 2)
         id_to_link = self.workflow_reader.id_to_link
         id_to_node = {node.id: node for node in self.workflow_reader.workflow_data.nodes}
         set_nodes: Dict[Tuple[int, int], int] = {}
@@ -46,6 +46,8 @@ class LogicalConfig(object):
                 set_node.widgets_values = [node_name]
                 set_nodes[(input_node_id, input_port)] = set_node.id
                 new_link = workflow_writer.create_link(input_node_id, input_port, set_node.id, 0)
+                if new_link is None:
+                    continue
                 set_node_input = set_node.inputs[0]
                 set_node_input["type"] = new_link.link_type
                 set_node_input["name"] = new_link.link_type
@@ -113,7 +115,8 @@ class LogicalConfig(object):
 
                 min_output_col: int = 1024 * 1024
                 for out_node in out_edges[node]:
-                    out_col = node_to_col[out_node]
+                    if out_node in node_to_col:
+                        out_col = node_to_col[out_node]
                     if out_col > col_idx and out_col < min_output_col:
                         min_output_col = out_col
 

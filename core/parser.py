@@ -73,11 +73,11 @@ class WorkflowWriter(object):
 
     def is_valid_link(self, input_node_id: int, input_port: int, output_node_id: int, output_port: int) -> bool:
         if input_node_id not in self.id_to_node or output_node_id not in self.id_to_node:
-            raise ValueError("Invalid input_node_id or output_node_id!")
+            return False
         if input_node_id == output_node_id:
-            raise ValueError("Cannot link a node to itself!")
+            return False
         if input_port < 0 or output_port < 0:
-            raise ValueError("Port numbers must be non-negative integers!")
+            return False
         for link in self.workflow_data.links:
             if (link.input_node_id == input_node_id and 
                 link.input_port == input_port and 
@@ -139,9 +139,9 @@ class WorkflowWriter(object):
         self.id_to_node[node.id] = node
         return node
 
-    def create_link(self, input_node_id: int, input_port: int, output_node_id: int, output_port: int) -> Link:
+    def create_link(self, input_node_id: int, input_port: int, output_node_id: int, output_port: int) -> Link | None:
         if not self.is_valid_link(input_node_id, input_port, output_node_id, output_port):
-            raise ValueError("Invalid link parameters!")
+            return
         self.remove_exist_link(output_node_id, output_port)
         input_node = self.id_to_node[input_node_id]
         output_node = self.id_to_node[output_node_id]
