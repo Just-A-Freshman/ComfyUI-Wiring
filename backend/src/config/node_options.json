@@ -1,0 +1,15 @@
+{
+    "gap_x": 100,
+    "gap_y": 50,
+    "max_span": 6,
+    "size_align": true,
+    "set_node": true,
+    "fixed_fold_nodes": [
+        "GrowMaskWithBlur",
+        "ImageToMask",
+        "ImpactGaussianBlurMask"
+    ],
+    "fixed_unfold_nodes": [
+        "Reroute"
+    ]
+}

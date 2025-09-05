@@ -1,0 +1,10 @@
+{
+    "group_contain_propertion": 0.8,
+    "same_group_node_propertion": 0.9,
+    "padding_x": 20,
+    "heading_size_multiplier": 2,
+    "undistrubuted_x": -1000,
+    "undistrubuted_width": 500,
+    "undistrubuted_height": 200,
+    "undistrubuted_y_step": 300
+}
