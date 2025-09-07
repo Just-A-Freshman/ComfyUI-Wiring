@@ -1,8 +1,20 @@
 {
     "gap_x": 100,
-    "gap_y": 100,
-    "max_span": 6,
-    "size_align": true,
-    "set_node": true,
-    "force_unfold": true
+    "gap_y": 50,
+    "same_column_stacking_strength": 1,
+    "layout_calculator": "highly_align",
+    "remove_nails": true,
+    "remove_intermediate_nodes": true,
+    "set_color_for_main_path": true,
+    "calculator_align": "center",
+    "main_path_bg_color": "#FFCBA4",
+    "main_path_color": "#E0B390",
+    "fixed_fold_nodes": [
+        "GrowMaskWithBlur",
+        "ImageToMask",
+        "ImpactGaussianBlurMask"
+    ],
+    "fixed_unfold_nodes": [
+        "Reroute"
+    ]
 }

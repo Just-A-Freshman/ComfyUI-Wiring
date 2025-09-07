@@ -1,4 +1,4 @@
-from .Utils import NodeOptions, GroupOptions
+from .setting import NodeOptions, GroupOptions
 
 NodeOptions.load_setting()
 GroupOptions.load_setting()
