@@ -40,6 +40,7 @@ class StandardOrder(object):
                 for out_node in out_nodes:
                     col_to_out_nodes[node_to_col[out_node]].append(out_node)
                 move_new_col: int = min(col_to_out_nodes.keys()) - 1
+                # 注意这里我们不去重，因为看的就是线
                 min_col_out_nodes = col_to_out_nodes[move_new_col + 1]
                 if len(min_col_out_nodes) <= x0 and all(len(in_edges[i]) <= x1 for i in min_col_out_nodes):
                     move_new_col += 1

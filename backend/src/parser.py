@@ -65,10 +65,12 @@ class WorkflowIO(WorkflowGraph):
                 raise ValueError(f"Failed to parse workflow file: {e}")
             
     def export_file(self, output_path: str, overwrite_raw_data: bool = False) -> None:
-        out_edges = self.build_graph()
-        orders = DataTool.flatten_generator(AlgorithmTool.topological_sort(out_edges))
-        order_table = {node_id: order for order, node_id in enumerate(orders)}
-        
+        if {node["id"] for node in self.workflow_data.raw_data.get("nodes", [])} == set(self.id_to_node.keys()):
+            order_table = {node["id"]: node["order"] for node in self.workflow_data.raw_data.get("nodes", [])}
+        else:
+            out_edges = self.build_graph()
+            orders = DataTool.flatten_generator(AlgorithmTool.topological_sort(out_edges))
+            order_table = {node_id: order for order, node_id in enumerate(orders)}
         raw_data = self.workflow_data.raw_data
         if not overwrite_raw_data:
             raw_data = raw_data.copy()

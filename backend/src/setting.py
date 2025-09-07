@@ -1,4 +1,4 @@
-from typing import List, Dict, Union, Any
+from typing import List, Dict, Union, Literal, Any
 from pathlib import Path
 import json
 
@@ -19,9 +19,10 @@ class NodeOptions(object):
     remove_nails: bool = True
     remove_intermediate_nodes: bool = True
     set_color_for_main_path: bool = True
-    default_calculator: str = "highly_align"
-    main_path_bg_color: str = "#FF7F27"
-    main_path_color: str = "#C9641F"
+    layout_calculator: Literal["simple_align", "average_align", "highly_align"] = "highly_align"
+    calculator_align: Literal["bottom", "center", "top"] = "center"
+    main_path_bg_color: str = "#FFCBA4"
+    main_path_color: str = "#E0B390"
     fixed_fold_nodes: List[str] = []
     fixed_unfold_nodes: List[str] = []
 
@@ -39,12 +40,13 @@ class NodeOptions(object):
         cls.remove_nails = options.get("remove_nails", True)
         cls.remove_intermediate_nodes = options.get("remove_intermediate_nodes", True)
         cls.set_color_for_main_path = options.get("set_color_for_main_path", True)
-        default_calculator = options.get("default_calculator", "highly_align")
-        if default_calculator not in ("simple_align", "average_align", "highly_align"):
-            default_calculator = "highly_align"
-        cls.default_calculator = default_calculator
-        cls.main_path_bg_color = options.get("main_path_bg_color", "#FF7F27")
-        cls.main_path_color = options.get("main_path_color", "#C9641F")
+        layout_calculator = options.get("layout_calculator", "highly_align")
+        if layout_calculator not in ("simple_align", "average_align", "highly_align"):
+            layout_calculator = "highly_align"
+        cls.layout_calculator = layout_calculator
+        cls.calculator_align = options.get("calculator_align", "center")
+        cls.main_path_bg_color = options.get("main_path_bg_color", "#FFCBA4")
+        cls.main_path_color = options.get("main_path_color", "#E0B390")
         cls.fixed_fold_nodes = options.get("fixed_fold_nodes", [])
         cls.fixed_unfold_nodes = options.get("fixed_unfold_nodes", [])
 
