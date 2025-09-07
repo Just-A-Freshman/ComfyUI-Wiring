@@ -15,9 +15,13 @@ COLLAPSE_HEIGHT = 30
 class NodeOptions(object):
     gap_x: int = 100
     gap_y: int = 50
-    max_span: int = 6
-    size_align: bool = True
-    set_node: bool = False
+    same_column_stacking_strength: int = 1
+    remove_nails: bool = True
+    remove_intermediate_nodes: bool = True
+    set_color_for_main_path: bool = True
+    default_calculator: str = "highly_align"
+    main_path_bg_color: str = "#FF7F27"
+    main_path_color: str = "#C9641F"
     fixed_fold_nodes: List[str] = []
     fixed_unfold_nodes: List[str] = []
 
@@ -30,10 +34,17 @@ class NodeOptions(object):
     @classmethod
     def update_setting(cls, options: Dict[str, Any]) -> None:
         cls.gap_x = options.get("gap_x", 100)
-        cls.gap_y = options.get("gap_y", 80)
-        cls.max_span = options.get("max_span", 6)
-        cls.size_align = bool(options.get("size_align", True))
-        cls.set_node = bool(options.get("set_node", False))
+        cls.gap_y = options.get("gap_y", 50)
+        cls.same_column_stacking_strength = max(min(int(options.get("same_column_stacking_strength", 1)), 7), 0)
+        cls.remove_nails = options.get("remove_nails", True)
+        cls.remove_intermediate_nodes = options.get("remove_intermediate_nodes", True)
+        cls.set_color_for_main_path = options.get("set_color_for_main_path", True)
+        default_calculator = options.get("default_calculator", "highly_align")
+        if default_calculator not in ("simple_align", "average_align", "highly_align"):
+            default_calculator = "highly_align"
+        cls.default_calculator = default_calculator
+        cls.main_path_bg_color = options.get("main_path_bg_color", "#FF7F27")
+        cls.main_path_color = options.get("main_path_color", "#C9641F")
         cls.fixed_fold_nodes = options.get("fixed_fold_nodes", [])
         cls.fixed_unfold_nodes = options.get("fixed_unfold_nodes", [])
 

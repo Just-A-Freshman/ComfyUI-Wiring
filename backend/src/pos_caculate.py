@@ -229,4 +229,19 @@ class NodePosCalculator(object):
             col_widths = [WorkflowReader.real_size(node).width for node in column]
             x0 += (max(col_widths) + gap_x)
 
-
+    def modify_node_layout(
+            self,
+            columns: List[List[int]], 
+            base_x: int = 0, 
+            base_y: int = 0, 
+            align: Literal["top", "center", "bottom"] = "top",
+            method: Literal["simple_align", "average_align", "highly_align"] = "highly_align"
+        ) -> None:
+        if method == "simple_align":
+            self.simple_align_calculator(columns, base_x, base_y, align)
+        elif method == "average_align":
+            self.average_align_calculator(columns, base_x, base_y, align)
+        elif method == "highly_align":
+            self.highly_align_calculator(columns, base_x, base_y, align)
+        else:
+            raise ValueError("Cannot recognize the layout method.")

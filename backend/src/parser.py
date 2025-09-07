@@ -77,8 +77,6 @@ class WorkflowIO(WorkflowGraph):
         nodes_template = self.workflow_template["nodes"]
         raw_id_nodes: Dict[int, Dict] = {node["id"]: node for node in raw_data["nodes"]}
         for new_node in self.workflow_data.nodes:
-            if new_node.id == 432:
-                print(WorkflowReader.asdict(new_node))
             node_type = new_node.type
             new_node_dict: dict = WorkflowReader.asdict(new_node)
             new_node_dict["order"] = order_table[new_node.id]
@@ -243,7 +241,7 @@ class WorkflowWriter(WorkflowIO):
         id_to_node = self.id_to_node
         columns_objectification = [[id_to_node[j] for j in i] for i in columns]
         for column in columns_objectification:
-            max_width = min(max([i.size.width for i in column]), 450)
+            max_width = max(min(max([i.size.width for i in column]), 450), 150)
             for node in column:
                 node.size.width = max_width
 
@@ -321,7 +319,6 @@ class WorkflowWriter(WorkflowIO):
             self.id_to_node.pop(node.id)
             
     def remove_unnecessary_nodes(self) -> None:
-        # 非必要节点包括: Reroute, SetNode和GetNode
         wait_to_remove = [node for node in self.workflow_data.nodes if node.type == "Reroute"]
         all_set_nodes_map: Dict[str, Link] = {}
         for node in self.workflow_data.nodes:
@@ -349,6 +346,9 @@ class WorkflowWriter(WorkflowIO):
                 link = self.id_to_link.get(link_id)
                 if link:
                     self.create_link(set_node_link.input_node_id, set_node_link.input_port, link.output_node_id, link.output_port)
+        if self.workflow_data.extra.get("reroutes"):
+            # 这里图方便直接强改了
+            self.workflow_data.raw_data["extra"]["reroutes"] = []
         self.remove_nodes(*wait_to_remove)
 
     def remove_nail(self) -> None:

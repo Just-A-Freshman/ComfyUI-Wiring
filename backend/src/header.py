@@ -59,6 +59,8 @@ class Node:
     outputs: List[Dict[str, Any]]
     flags: Dict | None
     widgets_values: List[str | int | float] | None
+    color: str
+    bgcolor: str
 
     @classmethod
     def from_dict(cls, node_dict: Dict[str, Any]) -> Self:
@@ -70,7 +72,9 @@ class Node:
             inputs=node_dict.get("inputs", []),
             outputs=node_dict.get("outputs", []),
             flags=node_dict.get("flags"),
-            widgets_values=node_dict.get("widgets_values")
+            widgets_values=node_dict.get("widgets_values"),
+            color=node_dict.get("color", "#322"),
+            bgcolor=node_dict.get("bgcolor", "#533")
         )
 
 
@@ -118,12 +122,12 @@ class Group:
         )
 
 
-
 @dataclass
 class WorkflowData:
     nodes: List[Node]
     links: List[Link]
     groups: List[Group]
+    extra: Dict[str, Any]
     last_node_id: int
     last_link_id: int
     raw_data: dict
@@ -134,6 +138,7 @@ class WorkflowData:
             nodes=[Node.from_dict(node) for node in workflow_dict["nodes"]],
             links=[Link.from_list(link) for link in workflow_dict["links"]],
             groups=[Group.from_dict(group) for group in workflow_dict["groups"]],
+            extra=workflow_dict.get("extra", {}),
             last_node_id=workflow_dict["last_node_id"],
             last_link_id=workflow_dict["last_link_id"],
             raw_data=workflow_dict
