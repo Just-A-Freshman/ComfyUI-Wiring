@@ -78,4 +78,3 @@ If ComfyUI-Wiring simplifies your workflow, please give it a star ⭐—it helps
 
 *Visualize better. Work smarter. With ComfyUI-Wiring.*
 
-> （注：文档部分内容可能由 AI 生成）
